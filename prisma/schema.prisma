@@ -1,0 +1,63 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Area {
+  id       String    @id @default(uuid())
+  name     String    @unique @db.VarChar(30)
+  MetaData MetaData?
+}
+
+model Category {
+  id       String    @id @default(uuid())
+  name     String    @unique @db.VarChar(30)
+  MetaData MetaData?
+}
+
+model Contact {
+  id      String @id @default(uuid())
+  name    String @default("Anonymous") @db.VarChar(30)
+  surname String @default("Anonymous") @db.VarChar(30)
+  mail    String @default("Anonymous") @db.VarChar(50)
+  text    String
+}
+
+model LinkTree {
+  id       String @id @default(uuid())
+  linkName String
+  href     String
+}
+
+model MetaData {
+  id          String    @id @default(uuid())
+  created     DateTime  @default(now())
+  visible     Boolean   @default(false)
+  postId      String    @unique
+  categoryId  String?   @unique
+  areaId      String?   @unique
+  description String
+  Area        Area?     @relation(fields: [areaId], references: [id])
+  Category    Category? @relation(fields: [categoryId], references: [id])
+  Post        Post      @relation(fields: [postId], references: [id])
+  Tag         Tag[]
+}
+
+model Post {
+  id          String    @id @default(uuid())
+  featuredImg String
+  title       String    @db.VarChar(30)
+  content     String
+  uri         String    @unique @db.VarChar(30)
+  MetaData    MetaData?
+}
+
+model Tag {
+  id       String     @id @default(uuid())
+  name     String     @unique @db.VarChar(30)
+  MetaData MetaData[]
+}
