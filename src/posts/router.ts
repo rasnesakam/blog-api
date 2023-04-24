@@ -6,8 +6,14 @@ const prisma = new PrismaClient()
 
 const router = Router();
 
-interface Tag {}
-interface Category {}
+interface Tag {
+    id?: string,
+    name: string
+}
+interface Category {
+    id?: string,
+    name: string,
+}
 interface Area {
     id?: string
     name: string
@@ -71,16 +77,24 @@ router.route("/").post(async (req: PostRequest, res) => {
                 }
             },
             uri: uri,
-            content: "",
-            title: "",
-            featuredImg: ""
+            content: req.body.content,
+            title: req.body.title,
+            featuredImg: req.body.featuredImg
         },
         include: {
             MetaData: true,
         }
     });
-    res.status(200).send(datas);
-})
+    res.status(200).send(data);
+});
+
+router.route("/:id").delete(async (req, res) => {
+    await prisma.post.delete({
+        where: {
+            id: req.params.id
+        }
+    })
+});
 
 export default router;
 
