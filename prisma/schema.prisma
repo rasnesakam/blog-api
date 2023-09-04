@@ -24,6 +24,7 @@ model Contact {
   name    String @default("Anonymous") @db.VarChar(30)
   surname String @default("Anonymous") @db.VarChar(30)
   mail    String @default("Anonymous") @db.VarChar(50)
+  title    String @default("Anonymous") @db.VarChar(100)
   text    String
 }
 
