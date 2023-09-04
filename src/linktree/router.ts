@@ -33,3 +33,5 @@ router.route("/").get(async (req, res) => {
         return res.status(200).send(datas);
     return res.status(404).send({message:"No data found."});
 })
+
+export default router;
