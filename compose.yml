@@ -15,11 +15,15 @@ services:
       - 3000:3000
     restart: always
   db-blog-api:
-    image: postgres:latest
+    image: mongo
     environment:
-      - POSTGRES_PASSWORD=${DB_PASSWORD}
+        MONGO_INITDB_ROOT_USERNAME: ${DB_USER}
+        MONGO_INITDB_ROOT_PASSWORD: ${DB_PASSWORD}
+        MONGO_INITDB_DATABASE: ${DB_NAME}
     volumes:
-      - db_blog:/var/lib/postgresql/data
+      - db_blog:/data/db
     restart: always
     expose:
-      - 5432
+      - 27017
+    ports:
+      - "27017:27017"

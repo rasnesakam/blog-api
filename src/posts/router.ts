@@ -1,48 +1,36 @@
-import {Router} from "express";
+import { Router} from "express";
 import bodyParser from "body-parser";
-import { PrismaClient } from '@prisma/client'
-import * as QueryString from "querystring";
+import { PrismaClient} from '@prisma/client'
+
 const prisma = new PrismaClient()
 
 const router = Router();
 
-interface Tag {
-    id?: string,
-    name: string
-}
-interface Category {
-    id?: string,
-    name: string,
-}
-interface Area {
-    id?: string
-    name: string
-}
-
-interface MetaData {
-    id?: string,
-    created: "",
-    visible: boolean,
-    postId: string,
-    description: string,
-    area
-
-}
-
-interface Post {
-    metadata: MetaData,
-    uri: string,
-    content: string,
-    title: string,
-    featuredImg: string
-}
-
-interface PostRequest extends Express.Request {
-    body: Post
-}
-
 router.use(bodyParser.urlencoded({extended: true}));
 router.use(bodyParser.json());
+
+
+interface PostRequest extends Express.Request {
+    body: {
+        featuredImg: string
+        title: string
+        content: string
+        authorId: string
+        metaData: {
+            createdDate: Date
+            visible: boolean
+            description: string
+            area: string
+            categories: string[]
+            tags: string[]
+        }
+    }
+}
+
+function normalizeStr(str: string): string{
+    return str.toLowerCase().replace(" ","_")
+}
+
 
 router.route("/").get(async (req, res) => {
     let datas = await prisma.post.findMany();
@@ -50,39 +38,23 @@ router.route("/").get(async (req, res) => {
 })
 
 router.route("/").post(async (req: PostRequest, res) => {
-    let uri = req.body.title.toLowerCase().replace(" ", "_");
+    let uri = normalizeStr(req.body.title)
 
     let data = await prisma.post.create({
         data: {
-            MetaData: {
-                connectOrCreate: {
-                    where: {
-                        id: req.body.metadata.id
-                    },
-                    create: {
-                        created: Date.parse(req.body.metadata.created).toString(),
-                        description: req.body.metadata.description,
-                        visible: req.body.metadata.visible,
-                        Area: {
-                            connectOrCreate: {
-                                where: {
-                                    id: req.body.metadata.area.id
-                                },
-                                create: {
-                                    name: req.body.metadata.area.name
-                                }
-                            }
-                        }
-                    }
-                }
+            metaData: {
+                created: new Date(),
+                visible: req.body.metaData.visible,
+                description: req.body.metaData.description,
+                area: {name: req.body.metaData.area, normalizedName: normalizeStr(req.body.metaData.area)},
+                tags: req.body.metaData.tags.map(item => ({name: item, normalizedName: normalizeStr(item)})),
+                categories: req.body.metaData.categories.map(item => ({name: item, normalizedName: normalizeStr(item)}))
             },
-            uri: uri,
+            uri,
             content: req.body.content,
             title: req.body.title,
-            featuredImg: req.body.featuredImg
-        },
-        include: {
-            MetaData: true,
+            featuredImg: req.body.featuredImg,
+            authorId: req.body.authorId
         }
     });
     res.status(200).send(data);

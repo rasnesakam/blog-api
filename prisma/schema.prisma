@@ -3,62 +3,73 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "mongodb"
   url      = env("DATABASE_URL")
 }
 
-model Area {
-  id       String    @id @default(uuid())
-  name     String    @unique @db.VarChar(30)
-  MetaData MetaData?
+type Area {
+  name           String
+  normalizedName String
 }
 
-model Category {
-  id       String    @id @default(uuid())
-  name     String    @unique @db.VarChar(30)
-  MetaData MetaData?
+type Category {
+  name           String
+  normalizedName String
 }
 
-model Contact {
-  id      String @id @default(uuid())
-  name    String @default("Anonymous") @db.VarChar(30)
-  surname String @default("Anonymous") @db.VarChar(30)
-  mail    String @default("Anonymous") @db.VarChar(50)
-  title    String @default("Anonymous") @db.VarChar(100)
-  text    String
+type Tag {
+  name           String
+  normalizedName String
 }
 
-model LinkTree {
-  id       String @id @default(uuid())
-  linkName String
-  href     String
-}
-
-model MetaData {
-  id          String    @id @default(uuid())
-  created     DateTime  @default(now())
-  visible     Boolean   @default(false)
-  postId      String    @unique
-  categoryId  String?   @unique
-  areaId      String?   @unique
+type MetaData {
+  createdDate DateTime   @default(now())
+  visible     Boolean    @default(false)
   description String
-  Area        Area?     @relation(fields: [areaId], references: [id])
-  Category    Category? @relation(fields: [categoryId], references: [id])
-  Post        Post      @relation(fields: [postId], references: [id])
-  Tag         Tag[]
+  area        Area
+  categories  Category[]
+  tags        Tag[]
 }
 
 model Post {
-  id          String    @id @default(uuid())
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
   featuredImg String
-  title       String    @db.VarChar(30)
+  title       String
   content     String
-  uri         String    @unique @db.VarChar(30)
-  MetaData    MetaData?
+  uri         String   @unique
+  metaData    MetaData
+  Author      Author?  @relation(fields: [authorId], references: [id])
+  authorId    String   @db.ObjectId
 }
 
-model Tag {
-  id       String     @id @default(uuid())
-  name     String     @unique @db.VarChar(30)
-  MetaData MetaData[]
+enum Scope {
+  SELF
+  GENERAL
+}
+
+model Author {
+  id            String  @id @default(auto()) @map("_id") @db.ObjectId
+  teamId        String
+  name          String
+  middleName    String?
+  surname       String
+  scope         Scope   @default(SELF)
+  email         String
+  registerToken String
+  posts         Post[]
+}
+
+model Contact {
+  id      String @id @default(auto()) @map("_id") @db.ObjectId
+  name    String @default("Anonymous")
+  surname String @default("Anonymous")
+  mail    String @default("Anonymous")
+  title   String @default("Anonymous")
+  text    String
+}
+
+model SocialLinks {
+  id       String @id @default(auto()) @map("_id") @db.ObjectId
+  linkName String
+  href     String
 }
